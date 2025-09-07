@@ -1,6 +1,6 @@
 # spsc-queue
-A single producer single consumer wait-free and lock-free fixed size queue written in Zig. Inspired by [rigtorp's](https://github.com/rigtorp/SPSCQueue/tree/master) implementation in C++. This implementation is faster than [rigtorp's SPSC queue](https://github.com/rigtorp/SPSCQueue/tree/master),
-[*boost::lockfree::spsc*](https://www.boost.org/doc/libs/1_76_0/doc/html/boost/lockfree/spsc_queue.html), and [*folly::ProducerConsumerQueue*](https://github.com/facebook/folly/blob/master/folly/docs/ProducerConsumerQueue.md).
+A single producer single consumer wait-free and lock-free fixed size queue written in Zig. Inspired by [rigtorp's](https://github.com/rigtorp/SPSCQueue/tree/master) implementation in C++. This implementation is faster than [rigtorp/SPSCQueue](https://github.com/rigtorp/SPSCQueue/tree/master),
+[*boost::lockfree::spsc*](https://www.boost.org/doc/libs/1_76_0/doc/html/boost/lockfree/spsc_queue.html), [cdolan/zig-spsc-ring](https://github.com/cdolan/zig-spsc-ring.git), and [*folly::ProducerConsumerQueue*](https://github.com/facebook/folly/blob/master/folly/docs/ProducerConsumerQueue.md).
 
 ## Usage
 This library provides a managed and an unmanaged version of the queue, following the Zig standard library conventions.
