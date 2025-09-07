@@ -4,9 +4,24 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const spsc_mod = b.addModule("spsc_queue", .{
-        .root_source_file = b.path("src/spsc_queue.zig"),
+    const unmanaged_spsc_mod = b.addModule("unmanaged_spsc_queue", .{
+        .root_source_file = b.path("src/unmanaged.zig"),
         .target = target,
+    });
+
+    const managed_spsc_mod = b.addModule("managed_spsc_queue", .{
+        .root_source_file = b.path("src/managed.zig"),
+        .target = target,
+        .imports = &.{.{ .name = "unmanaged_spsc_queue", .module = unmanaged_spsc_mod }},
+    });
+
+    const root_mod = b.addModule("spsc_queue", .{
+        .root_source_file = b.path("src/root.zig"),
+        .target = target,
+        .imports = &.{
+            .{ .name = "unmanaged_spsc_queue", .module = unmanaged_spsc_mod },
+            .{ .name = "managed_spsc_queue", .module = managed_spsc_mod },
+        },
     });
 
     const example_exe = b.addExecutable(.{
@@ -16,7 +31,7 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "spsc_queue", .module = spsc_mod },
+                .{ .name = "spsc_queue", .module = root_mod },
             },
         }),
     });
@@ -34,7 +49,7 @@ pub fn build(b: *std.Build) void {
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "spsc_queue", .module = spsc_mod },
+                .{ .name = "spsc_queue", .module = root_mod },
             },
         }),
     });

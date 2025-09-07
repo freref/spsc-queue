@@ -16,12 +16,11 @@ const Consumer = struct {
 
 // A single-producer, single-consumer lock-free queue using a ring buffer.
 // Following the conventions from the Zig standard library.
-pub fn SpscQueue(comptime T: type) type {
+pub fn SpscQueueUnmanaged(comptime T: type) type {
     return struct {
         const Self = @This();
         const cache_line = std.atomic.cache_line;
 
-        allocator: std.mem.Allocator,
         items: []T,
         producer: Producer align(cache_line) = .{},
         consumer: Consumer align(cache_line) = .{},
@@ -29,26 +28,13 @@ pub fn SpscQueue(comptime T: type) type {
         pop_cursor_cache: usize = 0,
         push_cursor_cache: usize = 0,
 
-        /// Initialize with capacity to hold `num` elements.
-        /// Deinitialize with `deinit`.
-        pub fn initCapacity(allocator: std.mem.Allocator, num: usize) !Self {
-            std.debug.assert(num >= 1);
-
-            const n = num + 1;
-            const items = try allocator.alloc(T, n);
-
-            return Self{ .allocator = allocator, .items = items };
-        }
-
-        /// Initialize with externally-managed memory. The buffer determines the
-        /// capacity. Calling `deinit` will result in illegsl behavior.
-        pub fn initBuffer(buffer: []T) Self {
+        pub fn init(buffer: []T) Self {
             std.debug.assert(buffer.len >= 2);
             return Self{ .items = buffer };
         }
 
-        pub fn deinit(self: *Self) void {
-            self.allocator.free(self.items);
+        pub fn deinit(self: *Self, allocator: std.mem.Allocator) void {
+            allocator.free(self.items);
         }
 
         // Returns true if the queue is empty.

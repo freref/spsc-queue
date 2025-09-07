@@ -2,7 +2,7 @@ const std = @import("std");
 const spsc_queue = @import("spsc_queue");
 
 pub fn main() !void {
-    var queue = try spsc_queue.SpscQueue(u32).initCapacity(std.heap.page_allocator, 1);
+    var queue = try spsc_queue.SpscQueue(u32).init(std.heap.page_allocator, 1);
     defer queue.deinit();
 
     var t = try std.Thread.spawn(.{}, struct {

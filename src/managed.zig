@@ -1,0 +1,75 @@
+const std = @import("std");
+const SpscQueueUnmanaged = @import("unmanaged.zig").SpscQueueUnmanaged;
+
+// We align the producer and consumer to different cache lines to avoid false
+// sharing between them. We pad the producer and consumer to ensure that they
+// take up a full cache line each. We assume the cache line is bigger than
+// atomic.Value(usize).
+const Producer = struct {
+    push_cursor: std.atomic.Value(usize) = .{ .raw = 0 },
+    _pad: [std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))]u8 = undefined,
+};
+
+const Consumer = struct {
+    pop_cursor: std.atomic.Value(usize) = .{ .raw = 0 },
+    _pad: [std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))]u8 = undefined,
+};
+
+// A single-producer, single-consumer lock-free queue using a ring buffer.
+// Following the conventions from the Zig standard library.
+pub fn SpscQueue(comptime T: type) type {
+    return struct {
+        const Self = @This();
+        const cache_line = std.atomic.cache_line;
+
+        allocator: std.mem.Allocator,
+        inner: SpscQueueUnmanaged(T),
+
+        /// Initialize with capacity to hold `num` elements.
+        pub fn init(allocator: std.mem.Allocator, num: usize) !Self {
+            std.debug.assert(num >= 1);
+
+            const n = num + 1;
+            const items = try allocator.alloc(T, n);
+
+            return Self{
+                .allocator = allocator,
+                .inner = SpscQueueUnmanaged(T).init(items),
+            };
+        }
+
+        pub fn deinit(self: *Self) void {
+            self.allocator.free(self.inner.items);
+        }
+
+        // Returns true if the queue is empty.
+        pub fn isEmpty(self: *Self) bool {
+            return self.inner.isEmpty();
+        }
+
+        pub fn size(self: *Self) usize {
+            return self.inner.size();
+        }
+
+        // Blocking push, spins until there is room in the queue.
+        pub fn push(self: *Self, value: T) void {
+            return self.inner.push(value);
+        }
+
+        // Non-blocking push, returns false if the queue is full.
+        pub fn tryPush(self: *Self, value: T) bool {
+            return self.inner.tryPush(value);
+        }
+
+        // Returns a pointer to the front item, or null if the queue is empty.
+        pub fn front(self: *Self) ?*T {
+            return self.inner.front();
+        }
+
+        // IMPORTANT: pop must only be called after front() returned non-null.
+        // The consumer is responsible for cleaning up the item if needed.
+        pub fn pop(self: *Self) void {
+            return self.inner.pop();
+        }
+    };
+}

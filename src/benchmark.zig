@@ -16,7 +16,7 @@ fn spscReadWorker(q: *spsc_queue.SpscQueue(u64), rounds: u64) void {
 }
 
 pub fn main() !void {
-    var queue = try spsc_queue.SpscQueue(u64).initCapacity(std.heap.page_allocator, capacity);
+    var queue = try spsc_queue.SpscQueue(u64).init(std.heap.page_allocator, capacity);
     defer queue.deinit();
 
     var reader = try std.Thread.spawn(.{}, spscReadWorker, .{ &queue, total_rounds });
