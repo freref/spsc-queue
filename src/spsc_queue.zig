@@ -1,16 +1,17 @@
 const std = @import("std");
 
 // We align the producer and consumer to different cache lines to avoid false
-// sharing between them. We cache the read and write indices to avoid
-// unnecessary atomic loads.
+// sharing between them. We pad the producer and consumer to ensure that they
+// take up a full cache line each. We assume the cache line is bigger than
+// atomic.Value(usize).
 const Producer = struct {
     push_cursor: std.atomic.Value(usize) = .{ .raw = 0 },
-    pop_cursor_cache: usize = 0,
+    _pad: [std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))]u8 = undefined,
 };
 
 const Consumer = struct {
     pop_cursor: std.atomic.Value(usize) = .{ .raw = 0 },
-    push_cursor_cache: usize = 0,
+    _pad: [std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))]u8 = undefined,
 };
 
 // A single-producer, single-consumer lock-free queue using a ring buffer.
@@ -24,6 +25,9 @@ pub fn SpscQueue(comptime T: type) type {
         items: []T,
         producer: Producer align(cache_line) = .{},
         consumer: Consumer align(cache_line) = .{},
+
+        pop_cursor_cache: usize align(cache_line) = 0,
+        push_cursor_cache: usize align(cache_line) = 0,
 
         /// Initialize with capacity to hold `num` elements.
         /// Deinitialize with `deinit`.
@@ -72,10 +76,10 @@ pub fn SpscQueue(comptime T: type) type {
             if (next == self.items.len) next = 0;
 
             // Spin until there is room.
-            while (next == self.producer.pop_cursor_cache) {
-                self.producer.pop_cursor_cache = self.consumer.pop_cursor.load(.acquire);
+            while (next == self.pop_cursor_cache) {
+                self.pop_cursor_cache = self.consumer.pop_cursor.load(.acquire);
 
-                if (next == self.producer.pop_cursor_cache) {
+                if (next == self.pop_cursor_cache) {
                     std.atomic.spinLoopHint();
                 }
             }
@@ -91,10 +95,10 @@ pub fn SpscQueue(comptime T: type) type {
             if (next == self.items.len) next = 0;
 
             // Refresh cached read index if we *think* it's full.
-            if (next == self.producer.pop_cursor_cache) {
-                self.producer.pop_cursor_cache = self.consumer.pop_cursor.load(.acquire);
+            if (next == self.pop_cursor_cache) {
+                self.pop_cursor_cache = self.consumer.pop_cursor.load(.acquire);
                 // Cache is full if the next index catches up with the read index.
-                if (next == self.producer.pop_cursor_cache) return false;
+                if (next == self.pop_cursor_cache) return false;
             }
 
             self.items[w] = value;
@@ -106,9 +110,9 @@ pub fn SpscQueue(comptime T: type) type {
         pub fn front(self: *Self) ?*T {
             const r = self.consumer.pop_cursor.load(.monotonic);
 
-            if (r == self.consumer.push_cursor_cache) {
-                self.consumer.push_cursor_cache = self.producer.push_cursor.load(.acquire);
-                if (self.consumer.push_cursor_cache == r) return null;
+            if (r == self.push_cursor_cache) {
+                self.push_cursor_cache = self.producer.push_cursor.load(.acquire);
+                if (self.push_cursor_cache == r) return null;
             }
 
             return &self.items[r];
