@@ -20,7 +20,7 @@ pub fn SpscQueue(comptime T: type) type {
         const Self = @This();
         const cache_line = std.atomic.cache_line;
 
-        allocator: ?std.mem.Allocator,
+        allocator: std.mem.Allocator,
         items: []T,
         producer: Producer align(cache_line) = .{},
         consumer: Consumer align(cache_line) = .{},
@@ -41,16 +41,14 @@ pub fn SpscQueue(comptime T: type) type {
         }
 
         /// Initialize with externally-managed memory. The buffer determines the
-        /// capacity.
+        /// capacity. Calling `deinit` will result in illegsl behavior.
         pub fn initBuffer(buffer: []T) Self {
             std.debug.assert(buffer.len >= 2);
             return Self{ .items = buffer };
         }
 
         pub fn deinit(self: *Self) void {
-            if (self.allocator) |allocator| {
-                allocator.free(self.items);
-            }
+            self.allocator.free(self.items);
         }
 
         // Returns true if the queue is empty.
