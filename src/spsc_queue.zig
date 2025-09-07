@@ -26,8 +26,8 @@ pub fn SpscQueue(comptime T: type) type {
         producer: Producer align(cache_line) = .{},
         consumer: Consumer align(cache_line) = .{},
 
-        pop_cursor_cache: usize align(cache_line) = 0,
-        push_cursor_cache: usize align(cache_line) = 0,
+        pop_cursor_cache: usize = 0,
+        push_cursor_cache: usize = 0,
 
         /// Initialize with capacity to hold `num` elements.
         /// Deinitialize with `deinit`.
