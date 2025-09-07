@@ -4,7 +4,7 @@ const spsc_queue = @import("spsc_queue");
 const total_rounds: u64 = 10_000_000;
 const capacity: usize = 10_000_000;
 
-fn spscReadWorker(q: *spsc_queue.SpscQueue(u64), rounds: u64) void {
+fn spscReadWorker(q: *spsc_queue.SpscQueue(i32), rounds: u64) void {
     var i: u64 = 0;
     while (i < rounds) {
         while (q.front() == null) {}
@@ -16,14 +16,14 @@ fn spscReadWorker(q: *spsc_queue.SpscQueue(u64), rounds: u64) void {
 }
 
 pub fn main() !void {
-    var queue = try spsc_queue.SpscQueue(u64).initCapacity(std.heap.page_allocator, capacity);
+    var queue = try spsc_queue.SpscQueue(i32).initCapacity(std.heap.page_allocator, capacity);
     defer queue.deinit();
 
     var reader = try std.Thread.spawn(.{}, spscReadWorker, .{ &queue, total_rounds });
 
     const start_ns: i128 = std.time.nanoTimestamp();
 
-    var i: u64 = 0;
+    var i: i32 = 0;
     while (i < total_rounds) : (i += 1) {
         queue.push(i);
     }
