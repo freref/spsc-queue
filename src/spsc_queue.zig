@@ -35,11 +35,7 @@ pub fn SpscQueue(comptime T: type) type {
             std.debug.assert(num >= 1);
 
             const n = num + 1;
-            const items = try allocator.alignedAlloc(
-                T,
-                std.mem.Alignment.fromByteUnits(cache_line),
-                n,
-            );
+            const items = try allocator.alloc(T, n);
 
             return Self{ .allocator = allocator, .items = items };
         }
