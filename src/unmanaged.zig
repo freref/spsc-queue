@@ -2,16 +2,15 @@ const std = @import("std");
 
 // We align the producer and consumer to different cache lines to avoid false
 // sharing between them. We pad the producer and consumer to ensure that they
-// take up a full cache line each. We assume the cache line is bigger than
-// atomic.Value(usize).
+// take up a full cache line each.
 const Producer = struct {
     push_cursor: std.atomic.Value(usize) = .{ .raw = 0 },
-    _pad: [std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))]u8 = undefined,
+    _pad: [(std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))) % std.atomic.cache_line]u8 = undefined,
 };
 
 const Consumer = struct {
     pop_cursor: std.atomic.Value(usize) = .{ .raw = 0 },
-    _pad: [std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))]u8 = undefined,
+    _pad: [(std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))) % std.atomic.cache_line]u8 = undefined,
 };
 
 // A single-producer, single-consumer lock-free queue using a ring buffer.
