@@ -1,20 +1,6 @@
 const std = @import("std");
 const SpscQueueUnmanaged = @import("unmanaged.zig").SpscQueueUnmanaged;
 
-// We align the producer and consumer to different cache lines to avoid false
-// sharing between them. We pad the producer and consumer to ensure that they
-// take up a full cache line each. We assume the cache line is bigger than
-// atomic.Value(usize).
-const Producer = struct {
-    push_cursor: std.atomic.Value(usize) = .{ .raw = 0 },
-    _pad: [std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))]u8 = undefined,
-};
-
-const Consumer = struct {
-    pop_cursor: std.atomic.Value(usize) = .{ .raw = 0 },
-    _pad: [std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))]u8 = undefined,
-};
-
 // A single-producer, single-consumer lock-free queue using a ring buffer.
 // Following the conventions from the Zig standard library.
 pub fn SpscQueue(comptime T: type) type {
@@ -26,20 +12,22 @@ pub fn SpscQueue(comptime T: type) type {
         inner: SpscQueueUnmanaged(T),
 
         /// Initialize with capacity to hold `num` elements.
-        pub fn init(allocator: std.mem.Allocator, num: usize) !Self {
-            std.debug.assert(num >= 1);
-
-            const n = num + 1;
-            const items = try allocator.alloc(T, n);
-
+        pub fn initCapacity(allocator: std.mem.Allocator, num: usize) !Self {
             return Self{
                 .allocator = allocator,
-                .inner = SpscQueueUnmanaged(T).init(items),
+                .inner = try SpscQueueUnmanaged(T).initCapacity(allocator, num),
+            };
+        }
+
+        pub fn fromOwnedSlice(allocator: std.mem.Allocator, buffer: []T) Self {
+            return Self{
+                .allocator = allocator,
+                .inner = SpscQueueUnmanaged(T).initBuffer(buffer),
             };
         }
 
         pub fn deinit(self: *Self) void {
-            self.allocator.free(self.inner.items);
+            self.inner.deinit(self.allocator);
         }
 
         // Returns true if the queue is empty.

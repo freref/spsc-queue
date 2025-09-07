@@ -28,9 +28,15 @@ pub fn SpscQueueUnmanaged(comptime T: type) type {
         pop_cursor_cache: usize = 0,
         push_cursor_cache: usize = 0,
 
-        pub fn init(buffer: []T) Self {
+        pub fn initBuffer(buffer: []T) Self {
             std.debug.assert(buffer.len >= 2);
             return Self{ .items = buffer };
+        }
+
+        pub fn initCapacity(allocator: std.mem.Allocator, num: usize) !Self {
+            std.debug.assert(num >= 1);
+            const items = try allocator.alloc(T, num + 1);
+            return .{ .items = items };
         }
 
         pub fn deinit(self: *Self, allocator: std.mem.Allocator) void {
