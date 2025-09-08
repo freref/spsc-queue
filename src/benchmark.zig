@@ -2,7 +2,7 @@ const std = @import("std");
 const spsc_queue = @import("spsc_queue");
 
 const total_rounds: u64 = 10_000_000;
-const capacity: usize = 10_000_000;
+const capacity: usize = 16_777_216;
 
 fn spscReadWorker(q: *spsc_queue.SpscQueue(i32), rounds: u64) void {
     var i: u64 = 0;
