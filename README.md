@@ -10,7 +10,10 @@ This library provides a **managed** and an **unmanaged** version of the queue, f
 The user can choose which implementation they want to use by setting the ``enforce_po2`` flag to ``true`` when defining the queue type. I opted for this interface over detecting if the capacity is po2, because the flag makes the choice explicit and known at comptime. It's clear to the user that there are two distinct implementations with different trade-offs. I borrowed this idea from [joadnacer/atomic_queue](https://github.com/joadnacer/atomic_queues.git).
 
 ## Usage
-You can find a basic example [here](./src/example.zig).
+You can find a basic example [here](./src/example.zig). You can run this example with the following command:
+```sh
+zig build run-example
+```
 
 **Unmanaged version:**
 ```zig
