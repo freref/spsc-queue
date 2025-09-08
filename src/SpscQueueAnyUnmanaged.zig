@@ -1,24 +1,30 @@
 const std = @import("std");
+const cache_line = std.atomic.cache_line;
 
 // We align the producer and consumer to different cache lines to avoid false
 // sharing between them. We pad the producer and consumer to ensure that they
 // take up a full cache line each.
+fn pad(comptime N: usize, comptime T: type) type {
+    const sz = @sizeOf(T);
+    const rem = sz % N;
+    return [if (rem == 0) 0 else N - rem]u8;
+}
+
 const Producer = struct {
     push_cursor: std.atomic.Value(usize) = .{ .raw = 0 },
-    _pad: [(std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))) % std.atomic.cache_line]u8 = undefined,
+    _pad: pad(cache_line, std.atomic.Value(usize)) = undefined,
 };
 
 const Consumer = struct {
     pop_cursor: std.atomic.Value(usize) = .{ .raw = 0 },
-    _pad: [(std.atomic.cache_line - @sizeOf(std.atomic.Value(usize))) % std.atomic.cache_line]u8 = undefined,
+    _pad: pad(cache_line, std.atomic.Value(usize)) = undefined,
 };
 
 // A single-producer, single-consumer lock-free queue using a ring buffer.
 // Following the conventions from the Zig standard library.
-pub fn SpscQueueUnmanaged(comptime T: type) type {
+pub fn SpscQueueAnyUnmanaged(comptime T: type) type {
     return struct {
         const Self = @This();
-        const cache_line = std.atomic.cache_line;
 
         items: []T,
         producer: Producer align(cache_line) = .{},

@@ -4,13 +4,27 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    const unmanaged_spsc_mod = b.addModule("unmanaged_spsc_queue", .{
-        .root_source_file = b.path("src/unmanaged.zig"),
+    const unmanaged_any_spsc_mod = b.addModule("unmanaged_spsc_queue", .{
+        .root_source_file = b.path("src/SpscQueueAnyUnmanaged.zig"),
         .target = target,
     });
 
+    const unmanaged_po2_spsc_mod = b.addModule("unmanaged_any_spsc_queue", .{
+        .root_source_file = b.path("src/SpscQueuePo2Unmanaged.zig"),
+        .target = target,
+    });
+
+    const unmanaged_spsc_mod = b.addModule("unmanaged_spsc_queue", .{
+        .root_source_file = b.path("src/SpscQueueUnmanaged.zig"),
+        .target = target,
+        .imports = &.{
+            .{ .name = "unmanaged_any_spsc_queue", .module = unmanaged_any_spsc_mod },
+            .{ .name = "unmanaged_po2_spsc_queue", .module = unmanaged_po2_spsc_mod },
+        },
+    });
+
     const managed_spsc_mod = b.addModule("managed_spsc_queue", .{
-        .root_source_file = b.path("src/managed.zig"),
+        .root_source_file = b.path("src/SpscQueue.zig"),
         .target = target,
         .imports = &.{.{ .name = "unmanaged_spsc_queue", .module = unmanaged_spsc_mod }},
     });

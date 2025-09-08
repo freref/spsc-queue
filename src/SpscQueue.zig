@@ -1,28 +1,27 @@
 const std = @import("std");
-const SpscQueueUnmanaged = @import("unmanaged.zig").SpscQueueUnmanaged;
+const SpscQueueUnmanaged = @import("SpscQueueUnmanaged.zig").SpscQueueUnmanaged;
 
 // A single-producer, single-consumer lock-free queue using a ring buffer.
 // Following the conventions from the Zig standard library.
-pub fn SpscQueue(comptime T: type) type {
+pub fn SpscQueue(comptime T: type, comptime enforce_po2: bool) type {
     return struct {
         const Self = @This();
-        const cache_line = std.atomic.cache_line;
 
         allocator: std.mem.Allocator,
-        inner: SpscQueueUnmanaged(T),
+        inner: SpscQueueUnmanaged(T, enforce_po2),
 
         /// Initialize with capacity to hold `num` elements.
         pub fn initCapacity(allocator: std.mem.Allocator, num: usize) !Self {
             return Self{
                 .allocator = allocator,
-                .inner = try SpscQueueUnmanaged(T).initCapacity(allocator, num),
+                .inner = try SpscQueueUnmanaged(T, enforce_po2).initCapacity(allocator, num),
             };
         }
 
         pub fn fromOwnedSlice(allocator: std.mem.Allocator, buffer: []T) Self {
             return Self{
                 .allocator = allocator,
-                .inner = SpscQueueUnmanaged(T).initBuffer(buffer),
+                .inner = SpscQueueUnmanaged(T, enforce_po2).initBuffer(buffer),
             };
         }
 

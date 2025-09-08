@@ -2,9 +2,9 @@ const std = @import("std");
 const spsc_queue = @import("spsc_queue");
 
 const total_rounds: u64 = 10_000_000;
-const capacity: usize = 10_000_000;
+const capacity: usize = 16_777_216;
 
-fn spscReadWorker(q: *spsc_queue.SpscQueue(i32), rounds: u64) void {
+fn spscReadWorker(q: *spsc_queue.SpscQueue(i32, true), rounds: u64) void {
     var i: u64 = 0;
     while (i < rounds) {
         while (q.front() == null) {}
@@ -16,7 +16,7 @@ fn spscReadWorker(q: *spsc_queue.SpscQueue(i32), rounds: u64) void {
 }
 
 pub fn main() !void {
-    var queue = try spsc_queue.SpscQueue(i32).initCapacity(std.heap.page_allocator, capacity);
+    var queue = try spsc_queue.SpscQueue(i32, true).initCapacity(std.heap.page_allocator, capacity);
     defer queue.deinit();
 
     var reader = try std.Thread.spawn(.{}, spscReadWorker, .{ &queue, total_rounds });
