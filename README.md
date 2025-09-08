@@ -4,13 +4,12 @@ A single producer single consumer wait-free and lock-free fixed size queue writt
 
 ## Implementation
 This library provides a **managed** and an **unmanaged** version of the queue, following the Zig standard library conventions.
-The managed version allocates memory for the queue using a provided allocator or takes ownership of a provided buffer.
-The unmanaged version requires the user to provide a buffer, or a caller-owned allocator to allocate memory for the queue.
 
-There are **2 implementations** of the queue. One that uses a slack space in the buffer and allows the user to set any capacity,
-and one that enforces power-of-2 (po2) capacity. The po2 implementation is faster due to less expensive arithmetic operations.
-The user can choose which implementation they want to use by setting the ``enforce_po2`` flag to ``true``.
-I opted for this interface over detecting if the capacity is po2, because the flag makes the choice explicit and known at comptime. I prefer making the difference visible to the user so there’s no “magic” happening under the hood and it’s clear that there are two distinct implementations with different trade-offs. I borrowed this idea from [joadnacer/atomic_queue](https://github.com/joadnacer/atomic_queues.git).
+There are **2 implementations** of the queue:
+- One that uses a slack space in the buffer and allows the user to set any capacity.
+- One that enforces power-of-2 (po2) capacity and is faster due to less expensive arithmetic operations
+
+The user can choose which implementation they want to use by setting the ``enforce_po2`` flag to ``true`` when defining the queue type. I opted for this interface over detecting if the capacity is po2, because the flag makes the choice explicit and known at comptime. It's clear to the user that there are two distinct implementations with different trade-offs. I borrowed this idea from [joadnacer/atomic_queue](https://github.com/joadnacer/atomic_queues.git).
 
 ## Usage
 You can find a basic example [here](./src/example.zig).
