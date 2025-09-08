@@ -10,7 +10,7 @@ The unmanaged version requires the user to provide a buffer, or a caller-owned a
 There are **2 implementations** of the queue. One that uses a slack space in the buffer and allows the user to set any capacity,
 and one that enforces power-of-2 (po2) capacity. The po2 implementation is faster due to less expensive arithmetic operations.
 The user can choose which implementation they want to use by setting the ``enforce_po2`` flag to ``true``.
-I opted for this interface over detecting if the capacity is po2, because the ``enforce_po2`` flag makes the choice explicit and known at comptime. I prefer making the difference visible to the user so there’s no “magic” happening under the hood. This way it’s clear that there are two distinct implementations with different trade-offs. I borrowed this idea from [joadnacer/atomic_queue](https://github.com/joadnacer/atomic_queues.git).
+I opted for this interface over detecting if the capacity is po2, because the flag makes the choice explicit and known at comptime. I prefer making the difference visible to the user so there’s no “magic” happening under the hood and it’s clear that there are two distinct implementations with different trade-offs. I borrowed this idea from [joadnacer/atomic_queue](https://github.com/joadnacer/atomic_queues.git).
 
 ## Usage
 You can find a basic example [here](./src/example.zig).
