@@ -1,12 +1,11 @@
 const std = @import("std");
-const SpscQueueUnmanaged = @import("unmanaged.zig").SpscQueueUnmanaged;
+const SpscQueueUnmanaged = @import("SpscQueueUnmanaged.zig").SpscQueueUnmanaged;
 
 // A single-producer, single-consumer lock-free queue using a ring buffer.
 // Following the conventions from the Zig standard library.
 pub fn SpscQueue(comptime T: type) type {
     return struct {
         const Self = @This();
-        const cache_line = std.atomic.cache_line;
 
         allocator: std.mem.Allocator,
         inner: SpscQueueUnmanaged(T),

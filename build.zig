@@ -5,12 +5,12 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const unmanaged_spsc_mod = b.addModule("unmanaged_spsc_queue", .{
-        .root_source_file = b.path("src/unmanaged.zig"),
+        .root_source_file = b.path("src/SpscQueueUnmanaged.zig"),
         .target = target,
     });
 
     const managed_spsc_mod = b.addModule("managed_spsc_queue", .{
-        .root_source_file = b.path("src/managed.zig"),
+        .root_source_file = b.path("src/SpscQueue.zig"),
         .target = target,
         .imports = &.{.{ .name = "unmanaged_spsc_queue", .module = unmanaged_spsc_mod }},
     });
