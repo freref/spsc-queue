@@ -14,6 +14,7 @@ I opted for this interface over detecting if the capacity is po2, because the ``
 
 ## Usage
 You can find a basic example [here](./src/example.zig).
+
 **Unmanaged version:**
 ```zig
 pub fn initBuffer(buffer: []T) Self
