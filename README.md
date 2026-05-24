@@ -38,6 +38,3 @@ pub fn tryPush(self: *Self, value: T) bool
 pub fn front(self: *Self) ?*T
 pub fn pop(self: *Self) void
 ```
-
-## Benchmarks
-I made a seperate repo for benchmarking various SPSC queue implementations, more info on the benchmarks can be found [there](https://github.com/freref/spsc-queue-benchmark/tree/master). These benchmarks are currently not very rigorous, but they give a rudimentary idea of the performance of this implementation compared to others. The benchmarks were run on a MacBook Pro (Apple M4 Pro, 14 cores: 10 performance + 4 efficiency) with 48 GB unified memory. ![Benchmarks bar chart](https://github.com/freref/spsc-queue-benchmark/blob/master/benchmarks.png?raw=true)

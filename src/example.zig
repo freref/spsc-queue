@@ -7,7 +7,7 @@ pub fn main() !void {
     defer queue.deinit();
 
     var t = try std.Thread.spawn(.{}, struct {
-        fn run(q: *spsc_queue.SpscQueue(u32)) void {
+        fn run(q: *spsc_queue.SpscQueue(u32, false)) void {
             while (q.front() == null) {
                 std.atomic.spinLoopHint();
             }
